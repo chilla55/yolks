@@ -389,6 +389,8 @@ prefix_mod_paths() {
     echo $(IFS=';'; echo "${prefixed_mods[*]}")
 }
 
+echo -e "${CYAN}${SERVERMODS}${NC}"
+echo -e "${CYAN}${CLIENT_MODS}${NC}"
 # Only proceed if MODMOUNT is defined
 if [[ -n "${MODMOUNT}" ]]; then
     CLIENT_MODS=$(prefix_mod_paths "${CLIENT_MODS}" "${MODMOUNT}")
@@ -414,6 +416,12 @@ if [[ ${HC_NUM} > 0 ]]; then
 fi
 
 # Start the Server
+echo -e "\n${GREEN}[STARTUP]:${NC} Starting Arma 3 Server with the following mods:"
+echo -e "${CYAN}${allMods}${NC}"
+echo -e "${CYAN}${SERVERMODS}${NC}"
+echo -e "${CYAN}${CLIENT_MODS}${NC}"
+echo -e "${CYAN}${OPTIONALMODS}${NC}"
+
 echo -e "\n${GREEN}[STARTUP]:${NC} Starting server with the following startup command:"
 echo -e "${CYAN}${modifiedStartup}${NC}\n"
 ${modifiedStartup}
