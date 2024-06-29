@@ -388,9 +388,9 @@ prefix_mod_paths() {
     done
     echo $(IFS=';'; echo "${prefixed_mods[*]}")
 }
-
-echo -e "${CYAN}${SERVERMODS}${NC}"
-echo -e "${CYAN}${CLIENT_MODS}${NC}"
+echo -e "ServerMods: ${SERVERMODS}"
+echo -e "ClientMods: ${CLIENT_MODS}"
+echo -e "MODMOUNT: ${MODMOUNT}"
 # Only proceed if MODMOUNT is defined
 if [[ -n "${MODMOUNT}" ]]; then
     CLIENT_MODS=$(prefix_mod_paths "${CLIENT_MODS}" "${MODMOUNT}")
