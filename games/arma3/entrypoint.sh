@@ -30,13 +30,13 @@ NC='\033[0m' # No Color
 #
 # Runs SteamCMD with specified variables and performs error handling.
 function RunSteamCMD { #[Input: int server=0 mod=1 optional_mod=2; int id]
-    # Clear previous SteamCMD log
-    if [[ -f "${STEAMCMD_LOG}" ]]; then
-        rm -f "${STEAMCMD_LOG:?}"
-    fi
 
     updateAttempt=0
     while (( $updateAttempt < $STEAMCMD_ATTEMPTS )); do # Loop for specified number of attempts
+        # Clear previous SteamCMD log
+        if [[ -f "${STEAMCMD_LOG}" ]]; then
+            rm -f "${STEAMCMD_LOG:?}"
+        fi
         # Increment attempt counter
         updateAttempt=$((updateAttempt+1))
 
