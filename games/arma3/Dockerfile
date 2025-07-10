@@ -29,7 +29,14 @@ RUN         dpkg --add-architecture i386 \
                 libnss-wrapper:i386 \
                 libtbb2 \
                 libtbb2:i386 \
-                tini
+                libcurl4-openssl-dev \
+                tini 
+            ##&& ln -s /usr/lib/x86_64-linux-gnu/libcurl.so.4 /usr/lib/x86_64-linux-gnu/libcurl.so
+            
+RUN LIBCURL_PATH="/usr/lib/x86_64-linux-gnu/libcurl.so.4" && \
+    if [ -f "$LIBCURL_PATH" ] && [ ! -f "${LIBCURL_PATH%.*}" ]; then \
+        ln -s "$LIBCURL_PATH" "${LIBCURL_PATH%.*}"; \
+    fi
 
 ## Configure locale
 RUN         update-locale lang=en_US.UTF-8 \
