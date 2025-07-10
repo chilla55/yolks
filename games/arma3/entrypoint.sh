@@ -269,7 +269,7 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
                 if [[ -n $MODMOUNT ]] && [[ ! -d "./${modDir}" ]]; then
                     modDir="${MODMOUNT}/${modDir}"
                 fi
-
+                modDir="/home/container${modDir}"
                 # Get mod's latest update in epoch time from its Steam Workshop changelog page
                 latestUpdate=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep '<p id=' | head -1 | cut -d'"' -f2)
 
