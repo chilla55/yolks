@@ -116,6 +116,7 @@ function RunSteamCMD { #[Input: int server=0 mod=1 optional_mod=2; int id]
                 mkdir -p ${MOD_STORAGE_DIR}@$2
                 rm -rf ${MOD_STORAGE_DIR}@$2/*
                 mv -f ${WORKSHOP_DIR}/content/$GAME_ID/$2/* ${MOD_STORAGE_DIR}@$2
+                date +%s > ${MOD_STORAGE_DIR}@$2/.mod_timestamp
                 rm -d ${WORKSHOP_DIR}/content/$GAME_ID/$2
                 # Make the mods contents all lowercase
                 ModsLowercase ${MOD_STORAGE_DIR}@$2
@@ -273,7 +274,11 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
                 latestUpdate=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep '<p id=' | head -1 | cut -d'"' -f2)
 
                 # If the update time is valid and newer than the local directory's creation date, or the mod hasn't been downloaded yet, download the mod
-                if [[ ! -d $modDir ]] || [[ ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && ( $latestUpdate > $(find $modDir | head -1 | xargs stat -c%Y) ) ]]; then
+                #if [[ ! -d $modDir ]] || [[ ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && ( $latestUpdate > $(find $modDir | head -1 | xargs stat -c%Y) ) ]]; then
+                if [[ ! -d $modDir ]] || \
+                    [[ -f ${modDir}/.mod_timestamp && $latestUpdate -gt $(cat ${modDir}/.mod_timestamp) ]] || \
+                    [[ ! -f ${modDir}/.mod_timestamp && ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && ( $latestUpdate -gt $(find $modDir | head -1 | xargs stat -c%Y) ) ]]; then
+
                     # Get the mod's name from the Workshop page as well
                     modName=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep 'workshopItemTitle' | cut -d'>' -f2 | cut -d'<' -f1)
                     if [[ -z $modName ]]; then # Set default name if unavailable
