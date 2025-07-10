@@ -275,9 +275,7 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
 
                 # If the update time is valid and newer than the local directory's creation date, or the mod hasn't been downloaded yet, download the mod
                 #if [[ ! -d $modDir ]] || [[ ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && ( $latestUpdate > $(find $modDir | head -1 | xargs stat -c%Y) ) ]]; then
-                if [[ ! -d $modDir ]] || \
-                    [[ -f ${modDir}/.mod_timestamp && $latestUpdate -gt $(cat ${modDir}/.mod_timestamp) ]] || \
-                    [[ ! -f ${modDir}/.mod_timestamp && ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && ( $latestUpdate -gt $(find $modDir | head -1 | xargs stat -c%Y) ) ]]; then
+                if [[ ! -d $modDir ]] || [[ -f ${modDir}/.mod_timestamp && ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && $latestUpdate -gt $(cat ${modDir}/.mod_timestamp) ]]; then
 
                     # Get the mod's name from the Workshop page as well
                     modName=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep 'workshopItemTitle' | cut -d'>' -f2 | cut -d'<' -f1)
