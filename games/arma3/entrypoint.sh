@@ -273,10 +273,35 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
                 # Get mod's latest update in epoch time from its Steam Workshop changelog page
                 latestUpdate=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep '<p id=' | head -1 | cut -d'"' -f2)
 
+                echo -e "\n=== Mod Update Check Debug ==="
+                echo "modDir:              $modDir"
+                echo "Directory exists:    $( [[ -d "$modDir" ]] && echo 'yes' || echo 'no' )"
+                echo "Timestamp file:      $modDir/.mod_timestamp"
+                echo "Timestamp exists:    $( [[ -f "$modDir/.mod_timestamp" ]] && echo 'yes' || echo 'no' )"
+                echo "latestUpdate:        $latestUpdate"
+                echo "latestUpdate valid:  $( [[ $latestUpdate =~ ^[0-9]+$ ]] && echo 'yes' || echo 'no' )"
+
+                if [[ -f "$modDir/.mod_timestamp" ]]; then
+                    modTimestamp=$(< "$modDir/.mod_timestamp")
+                    echo "modTimestamp:        $modTimestamp"
+                    if [[ $latestUpdate =~ ^[0-9]+$ && $modTimestamp =~ ^[0-9]+$ ]]; then
+                        if (( latestUpdate > modTimestamp )); then
+                            echo "Comparison result:   latestUpdate > modTimestamp → YES"
+                        else
+                            echo "Comparison result:   latestUpdate > modTimestamp → NO"
+                        fi
+                    else
+                        echo "Comparison result:   INVALID — one or both values are non-numeric"
+                    fi
+                else
+                    echo "modTimestamp:        (not found)"
+                fi
+                echo "==============================="
+
+
                 # If the update time is valid and newer than the local directory's creation date, or the mod hasn't been downloaded yet, download the mod
                 #if [[ ! -d $modDir ]] || [[ ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && ( $latestUpdate > $(find $modDir | head -1 | xargs stat -c%Y) ) ]]; then
                 if [[ ! -d $modDir ]] || [[ -f $modDir/.mod_timestamp && ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && $latestUpdate -gt $(cat $modDir/.mod_timestamp) ]]; then
-
                     # Get the mod's name from the Workshop page as well
                     modName=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep 'workshopItemTitle' | cut -d'>' -f2 | cut -d'<' -f1)
                     if [[ -z $modName ]]; then # Set default name if unavailable
