@@ -325,6 +325,23 @@ if [[ ${MODS_LOWERCASE} == "1" ]]; then
     done
 fi
 
+prefix_mod_paths() {
+    local mods_string=$1
+    local modmount_path=$2
+    local prefixed_mods=()
+    IFS=';' read -ra mods <<< "$mods_string"
+    for mod in "${mods[@]}"; do
+        if [[ -d "./${mod}" ]]; then
+            prefixed_mods+=("./${mod}")
+        elif [[ -n "$modmount_path" && -d "./${modmount_path}/${mod}" ]]; then
+            prefixed_mods+=("./${modmount_path}/${mod}")
+        else
+            prefixed_mods+=("${mod}")
+        fi
+    done
+    echo $(IFS=';'; echo "${prefixed_mods[*]}")
+}
+
 # Setup NSS Wrapper for use ($NSS_WRAPPER_PASSWD and $NSS_WRAPPER_GROUP have been set by the Dockerfile)
 export USER_ID=$(id -u)
 export GROUP_ID=$(id -g)
