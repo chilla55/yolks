@@ -7,8 +7,8 @@
 ## License: MIT License
 
 ## === CONSTANTS ===
-STEAMCMD_DIR="./steamcmd"                       # SteamCMD's directory containing steamcmd.sh
-WORKSHOP_DIR="./Steam/steamapps/workshop"       # SteamCMD's directory containing workshop downloads
+STEAMCMD_DIR="/home/container/steamcmd"                       # SteamCMD's directory containing steamcmd.sh
+WORKSHOP_DIR="/home/container/Steam/steamapps/workshop"       # SteamCMD's directory containing workshop downloads
 STEAMCMD_LOG="${STEAMCMD_DIR}/steamcmd.log"     # Log file for SteamCMD
 GAME_ID=107410                                  # SteamCMD ID for the Arma 3 GAME (not server). Only used for Workshop mod downloads.
 EGG_URL='https://github.com/parkervcp/eggs/tree/master/game_eggs/steamcmd_servers/arma/arma3'   # URL for Pterodactyl Egg & Info (only used as info to legacy users)
@@ -108,9 +108,10 @@ function RunSteamCMD { #[Input: int server=0 mod=1 optional_mod=2; int id]
                 echo -e "\n${GREEN}[UPDATE]: Game server is up to date!${NC}"
             else # Mod
                 # Determine mod storage directory based on MODMOUNT
-                MOD_STORAGE_DIR="./"
                 if [[ -n "${MODMOUNT}" ]]; then
-                    MOD_STORAGE_DIR+="${MODMOUNT}/"
+                    MOD_STORAGE_DIR="/home/container/${MODMOUNT}/"
+                else
+                    MOD_STORAGE_DIR="/home/container/"
                 fi
                 # Move the downloaded mod to the determined directory, and replace existing mod if needed
                 mkdir -p ${MOD_STORAGE_DIR}@$2
@@ -123,12 +124,12 @@ function RunSteamCMD { #[Input: int server=0 mod=1 optional_mod=2; int id]
                 # Move any .bikey's to the keys directory, equip optional mod keys with a prefix
                 echo -e "\tMoving any mod ${CYAN}.bikey${NC} files to the ${CYAN}~/keys/${NC} folder..."
                 if [[ $1 == 1 ]]; then
-                    find ${MOD_STORAGE_DIR}@$2 -name "*.bikey" -type f -exec cp {} ./keys \;
+                    find ${MOD_STORAGE_DIR}@$2 -name "*.bikey" -type f -exec cp {} /home/container/keys \;
                 else
                     # Give optional mod keys a custom name which can be checked later for deleting unconfigured mods
                     for file in $(find ${MOD_STORAGE_DIR}@$2 -name "*.bikey" -type f); do
                         filename=$(basename ${file})
-                        cp $file ./keys/optional_$2_${filename}
+                        cp $file /home/container/keys/optional_$2_${filename}
                     done;
                 fi
                 echo -e "${GREEN}[UPDATE]: Mod download/update successful!${NC}"
@@ -152,7 +153,7 @@ function RunSteamCMD { #[Input: int server=0 mod=1 optional_mod=2; int id]
 # Takes a directory (string) as input, and recursively makes all files & folders lowercase.
 function ModsLowercase {
     echo -e "\n\tMaking mod ${CYAN}$1${NC} files/folders lowercase..."
-    for SRC in `find ./$1 -depth`
+    for SRC in `find $1 -depth`
     do
         DST=`dirname "${SRC}"`/`basename "${SRC}" | tr '[A-Z]' '[a-z]'`
         if [ "${SRC}" != "${DST}" ]
@@ -266,10 +267,11 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
                     modType=1
                     modDir=@${modID}
                 fi
-                if [[ -n $MODMOUNT ]] && [[ ! -d "./${modDir}" ]]; then
-                    modDir="${MODMOUNT}/${modDir}"
+                if [[ -n $MODMOUNT ]] && [[ ! -d "/home/container/${modDir}" ]]; then
+                    modDir="/home/container/${MODMOUNT}/${modDir}"
+                else
+                    modDir="/home/container/${modDir}"
                 fi
-                modDir="/home/container${modDir}"
                 # Get mod's latest update in epoch time from its Steam Workshop changelog page
                 latestUpdate=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep '<p id=' | head -1 | cut -d'"' -f2)
 
@@ -327,7 +329,7 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
         done
 
         # Check over key files for unconfigured optional mods' .bikey files
-        for keyFile in $(find ./keys -name "*.bikey" -type f); do
+        for keyFile in $(find /home/container/keys -name "*.bikey" -type f); do
             keyFileName=$(basename ${keyFile})
 
             # If the key file is using the optional mod file name
@@ -356,7 +358,7 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
 fi
 
 # Check if specified server binary exists.
-if [[ ! -f ./${SERVER_BINARY} ]]; then
+if [[ ! -f /home/container/${SERVER_BINARY} ]]; then
     echo -e "\n${RED}[STARTUP_ERR]: Specified Arma 3 server binary could not be found in the root directory!${NC}"
     echo -e "${YELLOW}Please do the following to resolve this issue:${NC}"
     echo -e "\t${CYAN}- Double check your \"Server Binary\" Startup Variable is correct.${NC}"
@@ -376,18 +378,18 @@ fi
 # Clear HC cache, if specified
 if [[ ${CLEAR_CACHE} == "1" ]]; then
     echo -e "\n${GREEN}[STARTUP]: ${CYAN}Clearing Headless Client profiles cache...${NC}"
-    for profileDir in ./serverprofile/home/*
+    for profileDir in /home/container/serverprofile/home/*
     do
-        [ "$profileDir" = "./serverprofile/home/Player" ] && continue
+        [ "$profileDir" = "/home/container/serverprofile/home/Player" ] && continue
         rm -rf $profileDir
     done
 fi
 
 # Check if basic.cfg exists, and download if not (Arma really doesn't like it missing for some reason)
-if [[ ! -f ./basic.cfg ]]; then
+if [[ ! -f /home/container/basic.cfg ]]; then
     echo -e "\n${YELLOW}[STARTUP_WARN]: Basic Network Configuration file \"${CYAN}basic.cfg${YELLOW}\" is missing!${NC}"
     echo -e "\t${YELLOW}Downloading default file for use instead...${NC}"
-    curl -sSL ${BASIC_URL} -o ./basic.cfg
+    curl -sSL ${BASIC_URL} -o /home/container/basic.cfg
 fi
 
 # Setup NSS Wrapper for use ($NSS_WRAPPER_PASSWD and $NSS_WRAPPER_GROUP have been set by the Dockerfile)
@@ -406,10 +408,10 @@ prefix_mod_paths() {
     local prefixed_mods=()
     IFS=';' read -ra mods <<< "$mods_string"
     for mod in "${mods[@]}"; do
-        if [[ -d "./${mod}" ]]; then
-            prefixed_mods+=("./${mod}")
-        elif [[ -n "$modmount_path" && -d "./${modmount_path}/${mod}" ]]; then
-            prefixed_mods+=("./${modmount_path}/${mod}")
+        if [[ -d "/home/container/${mod}" ]]; then
+            prefixed_mods+=("/home/container/${mod}")
+        elif [[ -n "$modmount_path" && -d "/home/container/${modmount_path}/${mod}" ]]; then
+            prefixed_mods+=("/home/container/${modmount_path}/${mod}")
         else
             prefixed_mods+=("${mod}")
         fi
@@ -435,9 +437,9 @@ if [[ ${HC_NUM} > 0 ]]; then
     do
         if [[ ${HC_HIDE} == "1" ]];
         then
-            ./${SERVER_BINARY} -client -connect=127.0.0.1 -port=${SERVER_PORT} -password="${SERVER_PASSWORD}" -profiles=./serverprofile -bepath=./battleye -mod="${CLIENT_MODS}" ${STARTUP_PARAMS} > /dev/null 2>&1 &
+            /home/container/${SERVER_BINARY} -client -connect=127.0.0.1 -port=${SERVER_PORT} -password="${SERVER_PASSWORD}" -profiles=/home/container/serverprofile -bepath=/home/container/battleye -mod="${CLIENT_MODS}" ${STARTUP_PARAMS} > /dev/null 2>&1 &
         else
-            ./${SERVER_BINARY} -client -connect=127.0.0.1 -port=${SERVER_PORT} -password="${SERVER_PASSWORD}" -profiles=./serverprofile -bepath=./battleye -mod="${CLIENT_MODS}" ${STARTUP_PARAMS} &
+            /home/container/${SERVER_BINARY} -client -connect=127.0.0.1 -port=${SERVER_PORT} -password="${SERVER_PASSWORD}" -profiles=/home/container/serverprofile -bepath=/home/container/battleye -mod="${CLIENT_MODS}" ${STARTUP_PARAMS} &
         fi
         echo -e "${GREEN}[STARTUP]:${CYAN} Headless Client $i${NC} launched."
     done
