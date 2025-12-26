@@ -333,10 +333,10 @@ prefix_mod_paths() {
     local prefixed_mods=()
     IFS=';' read -ra mods <<< "$mods_string"
     for mod in "${mods[@]}"; do
-        if [[ -d "/home/container/${mod}" ]]; then
-            prefixed_mods+=("/home/container/${mod}")
-        elif [[ -n "$modmount_path" && -d "/home/container/${modmount_path}/${mod}" ]]; then
-            prefixed_mods+=("/home/container/${modmount_path}/${mod}")
+        if [[ -d "${mod}" ]]; then
+            prefixed_mods+=("${mod}")
+        elif [[ -n "$modmount_path" && -d "${modmount_path}/${mod}" ]]; then
+            prefixed_mods+=("${modmount_path}/${mod}")
         else
             prefixed_mods+=("${mod}")
         fi
