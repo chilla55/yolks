@@ -2,32 +2,29 @@
 
 set -eu
 
-SERVER_DIR="${SERVER_DIR:-/mnt/server}"
+ROOT_DIR="${ROOT_DIR:-/home/container}"
 MONOLITH_REPO_URL="${MONOLITH_REPO_URL:-https://github.com/Monolith-Station/Monolith.git}"
 MONOLITH_REF="${MONOLITH_REF:-main}"
-MONOLITH_DIR="${MONOLITH_DIR:-${SERVER_DIR}/monolith}"
+MONOLITH_DIR="${MONOLITH_DIR:-${ROOT_DIR}/monolith}"
 MONOLITH_UPDATE_SUBMODULES="${MONOLITH_UPDATE_SUBMODULES:-1}"
-MONOLITH_RUN_BUILD="${MONOLITH_RUN_BUILD:-0}"
+MONOLITH_RUN_BUILD="${MONOLITH_RUN_BUILD:-1}"
 
 echo "[Monolith][INSTALL] Starting install/update flow"
 echo "[Monolith][INSTALL] Repo: ${MONOLITH_REPO_URL}"
 echo "[Monolith][INSTALL] Ref: ${MONOLITH_REF}"
 echo "[Monolith][INSTALL] Dir: ${MONOLITH_DIR}"
 
-mkdir -p "${SERVER_DIR}"
+mkdir -p "${ROOT_DIR}"
 mkdir -p "${MONOLITH_DIR}"
 
 if ! command -v git >/dev/null 2>&1; then
-    echo "[Monolith][INSTALL] git not found, attempting installation..."
-    if command -v apk >/dev/null 2>&1; then
-        apk add --no-cache git bash curl ca-certificates
-    elif command -v apt-get >/dev/null 2>&1; then
-        apt-get update
-        apt-get install -y git bash curl ca-certificates
-    else
-        echo "[Monolith][INSTALL][ERROR] No supported package manager found to install git."
-        exit 1
-    fi
+    echo "[Monolith][INSTALL][ERROR] git is not available in the runtime container."
+    exit 1
+fi
+
+if ! command -v dotnet >/dev/null 2>&1; then
+    echo "[Monolith][INSTALL][ERROR] dotnet is not available in the runtime container."
+    exit 1
 fi
 
 if [ ! -d "${MONOLITH_DIR}/.git" ]; then
@@ -42,6 +39,11 @@ if [ ! -d "${MONOLITH_DIR}/.git" ]; then
 fi
 
 cd "${MONOLITH_DIR}"
+
+if ! git config --global --get-all safe.directory 2>/dev/null | grep -Fx "${MONOLITH_DIR}" >/dev/null 2>&1; then
+    echo "[Monolith][INSTALL] Marking repository as a git safe.directory..."
+    git config --global --add safe.directory "${MONOLITH_DIR}" || true
+fi
 
 echo "[Monolith][INSTALL] Updating repository..."
 git remote set-url origin "${MONOLITH_REPO_URL}"
@@ -60,13 +62,15 @@ if [ "${MONOLITH_UPDATE_SUBMODULES}" = "1" ]; then
 fi
 
 if [ "${MONOLITH_RUN_BUILD}" = "1" ]; then
-    if command -v dotnet >/dev/null 2>&1 && [ -x "Scripts/sh/updateEngine.sh" ] && [ -x "Scripts/sh/buildAllDebug.sh" ]; then
+    if [ -f "Scripts/sh/updateEngine.sh" ] && [ -f "Scripts/sh/buildAllDebug.sh" ]; then
         echo "[Monolith][INSTALL] Running updateEngine.sh..."
-        bash Scripts/sh/updateEngine.sh
+        sh Scripts/sh/updateEngine.sh
         echo "[Monolith][INSTALL] Running buildAllDebug.sh..."
-        bash Scripts/sh/buildAllDebug.sh
+        sh Scripts/sh/buildAllDebug.sh
     else
-        echo "[Monolith][INSTALL][WARN] Build requested but dotnet/scripts missing; skipping build phase."
+        echo "[Monolith][INSTALL][WARN] Build requested but required scripts are missing."
+        echo "[Monolith][INSTALL][WARN] Required scripts: Scripts/sh/updateEngine.sh, Scripts/sh/buildAllDebug.sh"
+        echo "[Monolith][INSTALL][WARN] Skipping build phase."
     fi
 fi
 

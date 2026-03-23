@@ -12,8 +12,8 @@ Pterodactyl Docker image for Monolith that provides dependency tooling only.
 
 - Runs as the `container` user in `/home/container`
 - Expects `STARTUP` to be provided by your Pterodactyl egg
-- Expects your install/start script to live in the server files volume
-- Does not clone, build, or update the repository automatically unless your external script does it
+- Install script is intended to run inside this Monolith yolk container
+- Uses the container-provided `git` and `.NET` SDKs for clone/build
 
 ## Example startup command
 
@@ -25,9 +25,9 @@ Put `install-monolith.sh` in your Pterodactyl server files (mounted at `/home/co
 
 ## Installer variables
 
-- `SERVER_DIR` (default: `/mnt/server`)
+- `ROOT_DIR` (default: `/home/container`)
 - `MONOLITH_REPO_URL` (default: `https://github.com/Monolith-Station/Monolith.git`)
 - `MONOLITH_REF` (default: `main`)
-- `MONOLITH_DIR` (default: `${SERVER_DIR}/monolith`)
+- `MONOLITH_DIR` (default: `${ROOT_DIR}/monolith`)
 - `MONOLITH_UPDATE_SUBMODULES` (default: `1`)
-- `MONOLITH_RUN_BUILD` (default: `0`)
+- `MONOLITH_RUN_BUILD` (default: `1`)
