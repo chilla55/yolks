@@ -34,8 +34,8 @@ if [[ -z "${STARTUP:-}" ]]; then
 fi
 
 if [[ "${MONOLITH_BUILD_ON_LAUNCH:-1}" == "1" ]]; then
-    MONOLITH_BUILD_CMD="${MONOLITH_BUILD_CMD:-dotnet build Content.Server/Content.Server.csproj -c Debug -m:1 /nr:false /p:UseSharedCompilation=false /p:BuildInParallel=false /p:RunAnalyzers=false /p:EnforceCodeStyleInBuild=false /p:GenerateDocumentationFile=false}"
-    MONOLITH_BUILD_FALLBACK_CMD="${MONOLITH_BUILD_FALLBACK_CMD:-dotnet build Content.Server/Content.Server.csproj -c Debug -m:1 /nr:false /p:UseSharedCompilation=false /p:BuildInParallel=false /p:RunAnalyzers=false /p:EnforceCodeStyleInBuild=false /p:GenerateDocumentationFile=false /p:DebugType=None /p:DebugSymbols=false /p:Deterministic=false}"
+    MONOLITH_BUILD_CMD="${MONOLITH_BUILD_CMD:-dotnet build -c Debug}"
+    MONOLITH_BUILD_FALLBACK_CMD="${MONOLITH_BUILD_FALLBACK_CMD:-dotnet build -c Debug -m:1 /nr:false /p:UseSharedCompilation=false /p:BuildInParallel=false /p:RunAnalyzers=false /p:EnforceCodeStyleInBuild=false /p:GenerateDocumentationFile=false /p:DebugType=None /p:DebugSymbols=false /p:Deterministic=false}"
 
     if [[ -f "Scripts/sh/updateEngine.sh" ]]; then
         export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
