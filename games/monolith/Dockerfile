@@ -13,6 +13,7 @@ RUN         apk add --no-cache \
                 ca-certificates \
                 tzdata \
                 tini \
+                su-exec \
                 nss_wrapper \
                 icu-libs \
                 krb5-libs \
@@ -36,7 +37,6 @@ ADD         passwd.template /passwd.template
 
 RUN         addgroup -S container \
             && adduser -S -D -h /home/container -s /bin/bash -G container container
-USER        container
 ENV         USER=container HOME=/home/container
 WORKDIR     /home/container
 

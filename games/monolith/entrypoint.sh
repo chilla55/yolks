@@ -36,4 +36,8 @@ fi
 MODIFIED_STARTUP=$(eval echo "${STARTUP}")
 echo "[Monolith] Executing startup command: ${MODIFIED_STARTUP}"
 
+if [[ "$(id -u)" -eq 0 ]]; then
+    exec su-exec container:container bash -lc "${MODIFIED_STARTUP}"
+fi
+
 exec bash -lc "${MODIFIED_STARTUP}"
