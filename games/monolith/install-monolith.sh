@@ -2,12 +2,12 @@
 
 set -eu
 
-ROOT_DIR="${ROOT_DIR:-/home/container}"
+ROOT_DIR="${ROOT_DIR:-/mnt/server}"
 MONOLITH_REPO_URL="${MONOLITH_REPO_URL:-https://github.com/Monolith-Station/Monolith.git}"
 MONOLITH_REF="${MONOLITH_REF:-main}"
 MONOLITH_DIR="${MONOLITH_DIR:-${ROOT_DIR}/monolith}"
 MONOLITH_UPDATE_SUBMODULES="${MONOLITH_UPDATE_SUBMODULES:-1}"
-MONOLITH_RUN_BUILD="${MONOLITH_RUN_BUILD:-1}"
+MONOLITH_RUN_BUILD="${MONOLITH_RUN_BUILD:-0}"
 
 echo "[Monolith][INSTALL] Starting install/update flow"
 echo "[Monolith][INSTALL] Repo: ${MONOLITH_REPO_URL}"
@@ -72,6 +72,9 @@ if [ "${MONOLITH_RUN_BUILD}" = "1" ]; then
         echo "[Monolith][INSTALL][WARN] Required scripts: Scripts/sh/updateEngine.sh, Scripts/sh/buildAllDebug.sh"
         echo "[Monolith][INSTALL][WARN] Skipping build phase."
     fi
+else
+    echo "[Monolith][INSTALL] Build disabled during install (MONOLITH_RUN_BUILD=0)."
+    echo "[Monolith][INSTALL] Build will run during launch if MONOLITH_BUILD_ON_LAUNCH=1."
 fi
 
 echo "-----------------------------------------"

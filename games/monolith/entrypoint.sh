@@ -33,6 +33,24 @@ if [[ -z "${STARTUP:-}" ]]; then
     exit 1
 fi
 
+if [[ "${MONOLITH_BUILD_ON_LAUNCH:-1}" == "1" ]]; then
+    if [[ -f "Scripts/sh/updateEngine.sh" && -f "Scripts/sh/buildAllDebug.sh" ]]; then
+        export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+        export DOTNET_CLI_TELEMETRY_OPTOUT=1
+        export DOTNET_NOLOGO=1
+        export NUGET_XMLDOC_MODE=skip
+        export MSBUILDNODECOUNT=1
+
+        echo "[Monolith] Running updateEngine.sh before launch..."
+        sh Scripts/sh/updateEngine.sh
+        echo "[Monolith] Running buildAllDebug.sh before launch..."
+        sh Scripts/sh/buildAllDebug.sh
+    else
+        echo "[Monolith][WARN] MONOLITH_BUILD_ON_LAUNCH=1 but build scripts are missing."
+        echo "[Monolith][WARN] Expected: Scripts/sh/updateEngine.sh and Scripts/sh/buildAllDebug.sh"
+    fi
+fi
+
 MODIFIED_STARTUP=$(eval echo "${STARTUP}")
 echo "[Monolith] Executing startup command: ${MODIFIED_STARTUP}"
 
