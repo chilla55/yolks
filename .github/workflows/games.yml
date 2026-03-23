@@ -18,6 +18,7 @@ jobs:
         game:
           - arma3
           - dayz
+          - monolith
           
     steps:
       - uses: actions/checkout@v4
