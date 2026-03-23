@@ -11,12 +11,13 @@ Pterodactyl Docker image for Monolith that provides dependency tooling only.
 
 - Runs as the `container` user in `/home/container`
 - Expects `STARTUP` to be provided by your Pterodactyl egg
-- Does not clone, build, or update the repository automatically
+- Expects your install/start script to live in the server files volume
+- Does not clone, build, or update the repository automatically unless your external script does it
 
 ## Example startup command
 
 ```bash
-bash ./start-monolith.sh
+bash ./install-monolith.sh
 ```
 
-Put your custom clone/build/run logic in `start-monolith.sh` (or any script/command you set in `STARTUP`).
+Put `install-monolith.sh` in your Pterodactyl server files (mounted at `/home/container`) and call it from `STARTUP`.
