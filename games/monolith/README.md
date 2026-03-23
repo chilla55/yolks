@@ -21,3 +21,12 @@ bash ./install-monolith.sh
 ```
 
 Put `install-monolith.sh` in your Pterodactyl server files (mounted at `/home/container`) and call it from `STARTUP`.
+
+## Installer variables
+
+- `SERVER_DIR` (default: `/mnt/server`)
+- `MONOLITH_REPO_URL` (default: `https://github.com/Monolith-Station/Monolith.git`)
+- `MONOLITH_REF` (default: `main`)
+- `MONOLITH_DIR` (default: `${SERVER_DIR}`)
+- `MONOLITH_UPDATE_SUBMODULES` (default: `1`)
+- `MONOLITH_RUN_BUILD` (default: `0`)

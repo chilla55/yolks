@@ -10,7 +10,7 @@ sleep 1
 INTERNAL_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
 export INTERNAL_IP
 
-cd /home/container || exit 1
+cd /home/container/monolith || exit 1
 
 # Configure NSS wrapper so the process can run correctly with remapped UIDs/GIDs.
 if [[ -f /passwd.template ]]; then
