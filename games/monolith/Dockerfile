@@ -30,6 +30,7 @@ RUN         apt-get update \
 RUN         curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
             && chmod +x /tmp/dotnet-install.sh \
             && /tmp/dotnet-install.sh --version 9.0.101 --install-dir /usr/share/dotnet \
+            && /tmp/dotnet-install.sh --version 10.0.100 --install-dir /usr/share/dotnet \
             && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
             && rm -f /tmp/dotnet-install.sh
 

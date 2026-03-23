@@ -6,6 +6,7 @@ Pterodactyl Docker image for Monolith that provides dependency tooling only.
 
 - Git
 - .NET SDK 9.0.101
+- .NET SDK 10.0.100
 
 ## Runtime behavior
 
@@ -27,6 +28,6 @@ Put `install-monolith.sh` in your Pterodactyl server files (mounted at `/home/co
 - `SERVER_DIR` (default: `/mnt/server`)
 - `MONOLITH_REPO_URL` (default: `https://github.com/Monolith-Station/Monolith.git`)
 - `MONOLITH_REF` (default: `main`)
-- `MONOLITH_DIR` (default: `${SERVER_DIR}`)
+- `MONOLITH_DIR` (default: `${SERVER_DIR}/monolith`)
 - `MONOLITH_UPDATE_SUBMODULES` (default: `1`)
 - `MONOLITH_RUN_BUILD` (default: `0`)
