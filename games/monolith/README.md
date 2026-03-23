@@ -33,3 +33,5 @@ Put `install-monolith.sh` in your Pterodactyl server files (mounted at `/home/co
 - `MONOLITH_UPDATE_SUBMODULES` (default: `1`)
 - `MONOLITH_RUN_BUILD` (default: `0`, for install phase)
 - `MONOLITH_BUILD_ON_LAUNCH` (default: `1`, runs update/build scripts before startup command)
+- `MONOLITH_BUILD_CMD` (default: single-node low-memory `dotnet build` for `Content.Server`)
+- `MONOLITH_BUILD_FALLBACK_CMD` (default: stricter low-memory `dotnet build` retry with debug symbols disabled)

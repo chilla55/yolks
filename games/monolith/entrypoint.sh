@@ -34,20 +34,30 @@ if [[ -z "${STARTUP:-}" ]]; then
 fi
 
 if [[ "${MONOLITH_BUILD_ON_LAUNCH:-1}" == "1" ]]; then
-    if [[ -f "Scripts/sh/updateEngine.sh" && -f "Scripts/sh/buildAllDebug.sh" ]]; then
+    MONOLITH_BUILD_CMD="${MONOLITH_BUILD_CMD:-dotnet build Content.Server/Content.Server.csproj -c Debug -m:1 /nr:false /p:UseSharedCompilation=false /p:BuildInParallel=false /p:RunAnalyzers=false /p:EnforceCodeStyleInBuild=false /p:GenerateDocumentationFile=false}"
+    MONOLITH_BUILD_FALLBACK_CMD="${MONOLITH_BUILD_FALLBACK_CMD:-dotnet build Content.Server/Content.Server.csproj -c Debug -m:1 /nr:false /p:UseSharedCompilation=false /p:BuildInParallel=false /p:RunAnalyzers=false /p:EnforceCodeStyleInBuild=false /p:GenerateDocumentationFile=false /p:DebugType=None /p:DebugSymbols=false /p:Deterministic=false}"
+
+    if [[ -f "Scripts/sh/updateEngine.sh" ]]; then
         export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
         export DOTNET_CLI_TELEMETRY_OPTOUT=1
         export DOTNET_NOLOGO=1
         export NUGET_XMLDOC_MODE=skip
         export MSBUILDNODECOUNT=1
+        export COMPlus_gcServer=0
 
         echo "[Monolith] Running updateEngine.sh before launch..."
         sh Scripts/sh/updateEngine.sh
-        echo "[Monolith] Running buildAllDebug.sh before launch..."
-        sh Scripts/sh/buildAllDebug.sh
+
+        echo "[Monolith] Running launch build command..."
+        echo "[Monolith] ${MONOLITH_BUILD_CMD}"
+        if ! bash -lc "${MONOLITH_BUILD_CMD}"; then
+            echo "[Monolith][WARN] Launch build failed, retrying with fallback command..."
+            echo "[Monolith] ${MONOLITH_BUILD_FALLBACK_CMD}"
+            bash -lc "${MONOLITH_BUILD_FALLBACK_CMD}"
+        fi
     else
         echo "[Monolith][WARN] MONOLITH_BUILD_ON_LAUNCH=1 but build scripts are missing."
-        echo "[Monolith][WARN] Expected: Scripts/sh/updateEngine.sh and Scripts/sh/buildAllDebug.sh"
+        echo "[Monolith][WARN] Expected: Scripts/sh/updateEngine.sh"
     fi
 fi
 
