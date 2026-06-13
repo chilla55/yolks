@@ -109,7 +109,7 @@ function RunSteamCMD { #[Input: int server=0 mod=1 optional_mod=2; int id]
             else # Mod
                 # Determine mod storage directory based on MODMOUNT
                 if [[ -n "${MODMOUNT}" ]]; then
-                    MOD_STORAGE_DIR="/home/container/${MODMOUNT}/"
+                    MOD_STORAGE_DIR="${MODMOUNT}/"
                 else
                     MOD_STORAGE_DIR="/home/container/"
                 fi
@@ -268,7 +268,7 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
                     modDir=@${modID}
                 fi
                 if [[ -n $MODMOUNT ]] && [[ ! -d "/home/container/${modDir}" ]]; then
-                    modDir="/home/container/${MODMOUNT}/${modDir}"
+                    modDir="${MODMOUNT}/${modDir}"
                 else
                     modDir="/home/container/${modDir}"
                 fi
