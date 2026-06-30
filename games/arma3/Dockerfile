@@ -1,4 +1,4 @@
-FROM        --platform=$TARGETOS/$TARGETARCH debian:bullseye-slim
+FROM        --platform=$TARGETOS/$TARGETARCH debian:trixie-slim
 
 LABEL       author="Alexander Grötzsch(Chilla55)" maintainer="j.k0201@gmx.de"
 LABEL		originalauthor="David Wolfe (Red-Thirten)"
@@ -27,8 +27,8 @@ RUN         dpkg --add-architecture i386 \
                 lib32stdc++6 \
                 libnss-wrapper \
                 libnss-wrapper:i386 \
-                libtbb2 \
-                libtbb2:i386 \
+                libtbb12 \
+                libtbb12:i386 \
                 libcurl4-openssl-dev \
                 tini 
             ##&& ln -s /usr/lib/x86_64-linux-gnu/libcurl.so.4 /usr/lib/x86_64-linux-gnu/libcurl.so
