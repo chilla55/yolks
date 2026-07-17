@@ -272,14 +272,38 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
                 else
                     modDir="/home/container/${modDir}"
                 fi
-                # Get mod's latest update in epoch time from its Steam Workshop changelog page
-                latestUpdate=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep '<p id=' | head -1 | cut -d'"' -f2)
+                # Prefer Steam's published file API for reliable update timestamps.
+                updateSource="api-post"
+                workshopApiResponse=$(curl -sL --max-time 20 --retry 2 --retry-delay 2 \
+                    -X POST \
+                    -d "itemcount=1&publishedfileids%5B0%5D=${modID}" \
+                    "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/")
+                latestUpdate=$(echo "${workshopApiResponse}" | tr -d '\n' | grep -o '"time_updated"[[:space:]]*:[[:space:]]*[0-9]\+' | head -1 | grep -o '[0-9]\+')
+                apiItemResult=$(echo "${workshopApiResponse}" | tr -d '\n' | grep -o '"publishedfiledetails".*"result"[[:space:]]*:[[:space:]]*[0-9]\+' | head -1 | grep -o '[0-9]\+$')
+
+                # Some environments/proxies can be picky about POST form data. Retry with GET query params.
+                if [[ ! $latestUpdate =~ ^[0-9]+$ ]]; then
+                    updateSource="api-get"
+                    workshopApiResponse=$(curl -sL --max-time 20 --retry 2 --retry-delay 2 \
+                        "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?itemcount=1&publishedfileids%5B0%5D=${modID}")
+                    latestUpdate=$(echo "${workshopApiResponse}" | tr -d '\n' | grep -o '"time_updated"[[:space:]]*:[[:space:]]*[0-9]\+' | head -1 | grep -o '[0-9]\+')
+                    apiItemResult=$(echo "${workshopApiResponse}" | tr -d '\n' | grep -o '"publishedfiledetails".*"result"[[:space:]]*:[[:space:]]*[0-9]\+' | head -1 | grep -o '[0-9]\+$')
+                fi
+
+                # Fallback: parse changelog HTML when API value is missing/invalid.
+                if [[ ! $latestUpdate =~ ^[0-9]+$ ]]; then
+                    updateSource="html-fallback"
+                    workshopChangelog=$(curl -sL --max-time 20 --retry 2 --retry-delay 2 "https://steamcommunity.com/sharedfiles/filedetails/changelog/${modID}")
+                    latestUpdate=$(echo "${workshopChangelog}" | sed -n 's/.*<p id="\([0-9]\+\)".*/\1/p' | head -1)
+                fi
 
                 echo -e "\n=== Mod Update Check Debug ==="
                 echo "modDir:              $modDir"
                 echo "Directory exists:    $( [[ -d "$modDir" ]] && echo 'yes' || echo 'no' )"
                 echo "Timestamp file:      $modDir/.mod_timestamp"
                 echo "Timestamp exists:    $( [[ -f "$modDir/.mod_timestamp" ]] && echo 'yes' || echo 'no' )"
+                echo "updateSource:        $updateSource"
+                echo "apiItemResult:       ${apiItemResult:-n/a}"
                 echo "latestUpdate:        $latestUpdate"
                 echo "latestUpdate valid:  $( [[ $latestUpdate =~ ^[0-9]+$ ]] && echo 'yes' || echo 'no' )"
 
@@ -301,11 +325,23 @@ if [[ ${UPDATE_SERVER} == 1 ]]; then
                 echo "==============================="
 
 
-                # If the update time is valid and newer than the local directory's creation date, or the mod hasn't been downloaded yet, download the mod
-                #if [[ ! -d $modDir ]] || [[ ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && ( $latestUpdate > $(find $modDir | head -1 | xargs stat -c%Y) ) ]]; then
-                if [[ ! -d $modDir ]] || [[ -f $modDir/.mod_timestamp && ( -n $latestUpdate ) && ( $latestUpdate =~ ^[0-9]+$ ) && $latestUpdate -gt $(cat $modDir/.mod_timestamp) ]]; then
-                    # Get the mod's name from the Workshop page as well
-                    modName=$(curl -sL https://steamcommunity.com/sharedfiles/filedetails/changelog/$modID | grep 'workshopItemTitle' | cut -d'>' -f2 | cut -d'<' -f1)
+                shouldDownload=0
+                if [[ ! -d "$modDir" ]]; then
+                    shouldDownload=1
+                elif [[ ! -f "$modDir/.mod_timestamp" ]]; then
+                    # Existing mod without timestamp cannot be compared safely; refresh it.
+                    shouldDownload=1
+                elif [[ $latestUpdate =~ ^[0-9]+$ && $modTimestamp =~ ^[0-9]+$ && $latestUpdate -gt $modTimestamp ]]; then
+                    shouldDownload=1
+                fi
+
+                # If mod is new, missing timestamp, or known to be updated, download/refresh it.
+                if [[ $shouldDownload -eq 1 ]]; then
+                    # Get mod's title from API first; fallback to Workshop page title if needed.
+                    modName=$(echo "${workshopApiResponse}" | tr -d '\n' | sed -n 's/.*"title"[[:space:]]*:[[:space:]]*"\([^"\\]*\)".*/\1/p')
+                    if [[ -z $modName ]]; then
+                        modName=$(curl -sL "https://steamcommunity.com/sharedfiles/filedetails/changelog/${modID}" | grep 'workshopItemTitle' | cut -d'>' -f2 | cut -d'<' -f1)
+                    fi
                     if [[ -z $modName ]]; then # Set default name if unavailable
                         modName="[NAME UNAVAILABLE]"
                     fi
